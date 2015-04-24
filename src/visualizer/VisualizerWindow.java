@@ -1,14 +1,28 @@
 package visualizer;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.util.MapSettableTransformer;
@@ -21,11 +35,23 @@ import edu.uci.ics.jung.visualization.control.PluggableGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.ViewScalingControl;
+import edu.uci.ics.jung.visualization.picking.PickedState;
 
 public class VisualizerWindow extends JFrame {
 
     private Graph<Vertex, Edge> sequenceGraph;
     private VisualizationViewer<Vertex, Edge> networkCanvas;
+
+    
+    private final List<Vertex> pickedVertexList = new ArrayList<Vertex>();
+    private PickedState<Vertex> pickedState;
+    
+    private JComboBox<String> persNameField;
+    private JButton selectAllSimilarButton;
+    private JButton disconnectButton;
+    private JButton mergeButton;
+    private JCheckBox hideNamedSequence;
+    private JCheckBox plotNameColors;
     
 	public VisualizerWindow() {
 		// ----- General informations -----
@@ -52,8 +78,12 @@ public class VisualizerWindow extends JFrame {
         networkCanvas.setGraphMouse(pluggableMouse);
 		
 		// ----- The right control panel -----
-		
+        
+        loadControls();
+        
         JPanel controlPanel = new JPanel();
+        controlPanel.setMaximumSize(new Dimension(420, Integer.MAX_VALUE));
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         BoxLayout controlPanelLayout = new BoxLayout(controlPanel, BoxLayout.Y_AXIS);
         controlPanel.setLayout(controlPanelLayout);
 
@@ -62,16 +92,16 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Sequence(s) name: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
-        //controlPanel.add(sequenceLabelCombo);
+        controlPanel.add(persNameField);
         
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Controls: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
-        //controlPanel.add(selectAllSimilarButton);
-        //controlPanel.add(mergeButton);
-        //controlPanel.add(disconnectButton);
-        //controlPanel.add(hideNamedSequence);
-        //controlPanel.add(plotNameColors);
+        controlPanel.add(selectAllSimilarButton);
+        controlPanel.add(disconnectButton);
+        controlPanel.add(mergeButton);
+        controlPanel.add(hideNamedSequence);
+        controlPanel.add(plotNameColors);
         //controlPanel.add(new JButton("Save"));
         
         controlPanel.add(Box.createVerticalStrut(spacerSize));
@@ -119,4 +149,211 @@ public class VisualizerWindow extends JFrame {
 		}
 	}
 
+	private void loadControls()
+	{
+	    pickedState = networkCanvas.getPickedVertexState();
+        // Attach the listener that will print when the vertices selection changes.
+        pickedState.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                Object subject = e.getItem();
+                // The graph uses Integers for vertices.
+                if (subject instanceof Vertex)
+                {
+                    Vertex vertex = (Vertex) subject;
+                    if (pickedState.isPicked(vertex))
+                    {
+                        // Update the model
+                        pickedVertexList.add(vertex);
+                        
+                        // Update the icons
+                        vertex.setSelected(true);
+                        for(Vertex neighborVertex : sequenceGraph.getNeighbors(vertex))
+                        {
+                            neighborVertex.neighborSelected();
+                        }
+                        
+                        // Update the sequence pane
+                        //seqImagePane.setSeqId(vertex.getSeqId());
+                    }
+                    else
+                    {
+                        // Update the model
+                        pickedVertexList.remove(vertex);
+                        
+                        // Update the icons
+                        vertex.setSelected(false);
+                        for(Vertex neighborVertex : sequenceGraph.getNeighbors(vertex))
+                        {
+                            neighborVertex.neighborDeselected();
+                        }
+                        
+                        // Update the sequence pane
+                        //if(pickedVertexList.isEmpty())
+                        //{
+                        //    seqImagePane.setSeqId("");
+                        //}
+                    }
+                    // The parent function will repaint the graph
+                }
+            }
+        });
+        
+        
+        persNameField = new JComboBox<String>();
+        persNameField.setEditable(true);
+        persNameField.setMaximumSize(new Dimension(400, persNameField.getPreferredSize().height));
+        persNameField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        persNameField.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Rename the current selection
+                String currentText = ((JTextField)persNameField.getEditor().getEditorComponent()).getText();
+                for(Vertex currentVertex : pickedVertexList)
+                {
+                    currentVertex.setPersName(currentText);
+                }
+                
+                // Add the name to the list (if not already present)
+                ComboBoxModel<String> model = persNameField.getModel();
+                boolean found = false;
+                for(int i=0 ; i<model.getSize() ; i++) {
+                    if(currentText.equals((String)model.getElementAt(i)))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found)
+                {
+                    persNameField.addItem(currentText);
+                }
+                
+                networkCanvas.repaint();
+            }
+        });
+        
+        
+        selectAllSimilarButton = new JButton("Select all similar");
+        selectAllSimilarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                if(pickedVertexList.size() > 0)
+                {
+                    Vertex first = pickedVertexList.get(0); // We pick the first selected person
+                    for(Vertex currentVertex : sequenceGraph.getVertices())
+                    {
+                        if(currentVertex.getPersName().equals(first.getPersName()))
+                        {
+                            pickedState.pick(currentVertex, true); // Will repaint the graph
+                        }
+                    }
+                }
+            }
+        });
+        
+        
+        disconnectButton = new JButton("Disconnect selection");
+        disconnectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+
+                List<Edge> listRemove = new ArrayList<Edge>();
+                // For all selected nodes
+                for(Vertex pickedVertex : pickedVertexList)
+                {
+                    // We check if some neighbor are not selected
+                    for(Vertex neighborVertex : sequenceGraph.getNeighbors(pickedVertex))
+                    {
+                        if(!pickedVertexList.contains(neighborVertex))
+                        {
+                            neighborVertex.neighborDeselected();
+                            listRemove.add(sequenceGraph.findEdge(pickedVertex, neighborVertex));
+                        }
+                    }
+                }
+                for(Edge currentEdge : listRemove)
+                {
+                    sequenceGraph.removeEdge(currentEdge);
+                }
+                
+                networkCanvas.repaint();
+            }
+        });
+        
+        
+        mergeButton = new JButton("Merge together");
+        mergeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                final float maxWeightValue = 2.f; // TODO : Define max value
+                for(Vertex vertexI : pickedVertexList)
+                {
+                    for(Vertex vertexJ : pickedVertexList)
+                    {
+                        if(vertexI != vertexJ)
+                        {
+                            if(sequenceGraph.findEdge(vertexI, vertexJ) != null)
+                            {
+                                sequenceGraph.findEdge(vertexI, vertexJ).setWeight(maxWeightValue); // Set max weight
+                            }
+                            else
+                            {
+                                sequenceGraph.addEdge(new Edge(maxWeightValue), vertexI, vertexJ);
+                            }
+                        }
+                    }
+                }
+                
+                networkCanvas.repaint();
+            }
+        });
+        
+        
+        hideNamedSequence = new JCheckBox("Hide all named sequences");
+        hideNamedSequence.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(hideNamedSequence.isSelected())
+                {
+                    for(Vertex currentVertex : sequenceGraph.getVertices())
+                    {
+                        currentVertex.setIsHidden(true);
+                    }
+                }
+                else
+                {
+                    for(Vertex currentVertex : sequenceGraph.getVertices())
+                    {
+                        currentVertex.setIsHidden(false);
+                    }
+                }
+                networkCanvas.repaint();
+            }
+        });
+        
+        
+        plotNameColors = new JCheckBox("Show colors of named sequences");
+        plotNameColors.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(plotNameColors.isSelected())
+                {
+                    for(Vertex currentVertex : sequenceGraph.getVertices())
+                    {
+                        currentVertex.setPlotNameColor(true);
+                    }
+                }
+                else
+                {
+                    for(Vertex currentVertex : sequenceGraph.getVertices())
+                    {
+                        currentVertex.setPlotNameColor(false);
+                    }
+                }
+                networkCanvas.repaint();
+            }
+        });
+	}
 }

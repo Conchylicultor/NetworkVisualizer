@@ -1,8 +1,11 @@
 package visualizer;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +25,10 @@ public class Vertex {
     private BufferedImage bufferIcon;
     private Icon plottedIcon; // Icon after modifications (adding borders,...)
     
-    private boolean isHidden;
+    private boolean isHidden = false;
+    private boolean plotNameColor = false;
+    private boolean isSelected = false;
+    private int nbNeighborSelected = 0;
     
     public static Factory<Vertex> getFactory() {
         return new Factory<Vertex>() {
@@ -94,48 +100,90 @@ public class Vertex {
         BufferedImage tempIcon = new BufferedImage(plottedIconWidth, plottedIconHeight, BufferedImage.TYPE_INT_RGB);
         
         Graphics2D graphics = (Graphics2D)tempIcon.createGraphics();
+        
+        // Plot the icon
         graphics.drawImage(bufferIcon, 0, 0, plottedIconWidth, plottedIconHeight, null);
 
-        /*if(plotNameColor || isSelected || nbNeighborSelected > 0)
+        // Plot the border
+        if(plotNameColor || isSelected || nbNeighborSelected > 0)
         {
-            Graphics2D g = (Graphics2D) newImage.getGraphics();
-            g.setStroke(new BasicStroke(4.f));
+            graphics.setStroke(new BasicStroke(8.f));
+            
             if(isSelected)
             {
-                g.setColor(new Color(255, 25, 34));
+                graphics.setColor(new Color(255, 0, 0));
             }
             else if (nbNeighborSelected > 0)
             {
-                g.setColor(new Color(55, 255, 124));
+                graphics.setColor(new Color(0, 200, 0));
             }
             else if(plotNameColor)
             {
-                g.setStroke(new BasicStroke(8.f));
+                // Default color value
                 int valueR = 125;
                 int valueG = 125;
                 int valueB = 125;
+                
                 if(persName != null && !persName.isEmpty())
                 {
-                    int hascode = persName.hashCode();
-                    valueR = hascode%7777;
-                    valueR = valueR*valueR; // Avoid negative number
-                    valueG = hascode%8888;
-                    valueG = valueG*valueG;
-                    valueB = hascode%9999;
-                    valueB = valueB*valueB;
+                    Random r = new Random(persName.hashCode());
+                    valueR = r.nextInt(256);
+                    valueG = r.nextInt(256);
+                    valueB = r.nextInt(256);
                 }
 
-                Color colorBorder = new Color(valueR % 255,
-                                              valueG % 255,
-                                              valueB % 255);
-                g.setColor(colorBorder);
+                Color colorBorder = new Color(valueR,
+                                              valueG,
+                                              valueB);
+                graphics.setColor(colorBorder);
             }
-            g.drawRect(0, 0, newImage.getWidth(), newImage.getHeight());
-        }*/
+            
+            graphics.drawRect(0, 0, tempIcon.getWidth(), tempIcon.getHeight());
+        }
         
         graphics.dispose();
         
         plottedIcon = new LayeredIcon(new ImageIcon(tempIcon).getImage());
+    }
+
+    public void setIsHidden(boolean isHidden) {
+        this.isHidden = isHidden;
+        if(persName != null && !persName.isEmpty())
+            updateIcon();
+    }
+    
+    public void setPlotNameColor(boolean plotNameColor) {
+        this.plotNameColor = plotNameColor;
+        updateIcon();
+    }
+
+    public void setSelected(boolean isSelected) {
+        this.isSelected = isSelected;
+        updateIcon();
+    }
+
+    public void neighborSelected() {
+        nbNeighborSelected++;
+        if(nbNeighborSelected == 1) // Only update the first time
+            updateIcon();
+    }
+
+    public void neighborDeselected() {
+        nbNeighborSelected--;
+        if(nbNeighborSelected == 0) // Only update the first time
+            updateIcon();
+    }
+
+    public String getPersName() {
+        if(persName == null)
+            return "";
+        return persName;
+    }
+
+    public void setPersName(String persName) {
+        this.persName = persName;
+        if(plotNameColor || isHidden)
+            updateIcon();
     }
 
 }
