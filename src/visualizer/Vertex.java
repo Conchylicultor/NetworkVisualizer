@@ -59,33 +59,6 @@ public class Vertex {
         };
     }
 
-    public void setLabel(String transform) {
-        Pattern persPattern = Pattern.compile("pers:(\\S+)");
-        Pattern seqPattern = Pattern.compile("seq:(\\S+)");
-        Matcher persMatcher = persPattern.matcher(transform);
-        Matcher seqMatcher = seqPattern.matcher(transform);
-
-        if(persMatcher.find())
-        {
-            persName = persMatcher.group(1);
-        }
-        if(seqMatcher.find())
-        {
-            seqId = seqMatcher.group(1);
-            
-            // Load icon
-            String name = "/home/etienne/__A__/Dev/Reidentification/Data/Traces/" + seqId + ".png";
-            try {
-                bufferIcon = ImageIO.read(new File(name)); // Buffer will contain the original image (before transformations)
-
-                updateIcon();
-            } catch(Exception ex) {
-                System.err.println("Cannot load " + name);
-                System.err.println(ex.getMessage());
-            }
-        }
-    }
-
     private void updateIcon() {
         int plottedIconWidth = 40;
         int plottedIconHeight = 100;
@@ -144,6 +117,33 @@ public class Vertex {
         graphics.dispose();
         
         plottedIcon = new LayeredIcon(new ImageIcon(tempIcon).getImage());
+    }
+
+    public void setLabel(String transform) {
+        Pattern persPattern = Pattern.compile("pers:(\\S+)");
+        Pattern seqPattern = Pattern.compile("seq:(\\S+)");
+        Matcher persMatcher = persPattern.matcher(transform);
+        Matcher seqMatcher = seqPattern.matcher(transform);
+
+        if(persMatcher.find())
+        {
+            persName = persMatcher.group(1);
+        }
+        if(seqMatcher.find())
+        {
+            seqId = seqMatcher.group(1);
+            
+            // Load icon
+            String name = "/home/etienne/__A__/Dev/Reidentification/Data/Traces/" + seqId + ".png";
+            try {
+                bufferIcon = ImageIO.read(new File(name)); // Buffer will contain the original image (before transformations)
+
+                updateIcon();
+            } catch(Exception ex) {
+                System.err.println("Cannot load " + name);
+                System.err.println(ex.getMessage());
+            }
+        }
     }
 
     public void setIsHidden(boolean isHidden) {

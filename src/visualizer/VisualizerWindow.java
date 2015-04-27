@@ -22,6 +22,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
@@ -82,9 +83,13 @@ public class VisualizerWindow extends JFrame {
 		// ----- The right control panel -----
         
         loadControls();
+
+        JScrollPane sequenceImagesScrollPane = new JScrollPane(sequenceImagesPane, 
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         
         JPanel controlPanel = new JPanel();
-        controlPanel.setMaximumSize(new Dimension(420, Integer.MAX_VALUE));
+        controlPanel.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
         controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         BoxLayout controlPanelLayout = new BoxLayout(controlPanel, BoxLayout.Y_AXIS);
         controlPanel.setLayout(controlPanelLayout);
@@ -109,8 +114,7 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Sequence images: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
-        controlPanel.add(sequenceImagesPane);
-        //controlPanel.add(Box.createVerticalGlue());
+        controlPanel.add(sequenceImagesScrollPane);
         
         // ----- Assemble the global ui -----
         
@@ -204,7 +208,7 @@ public class VisualizerWindow extends JFrame {
         
         persNameField = new JComboBox<String>();
         persNameField.setEditable(true);
-        persNameField.setMaximumSize(new Dimension(400, persNameField.getPreferredSize().height));
+        persNameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, persNameField.getPreferredSize().height));
         persNameField.setAlignmentX(Component.LEFT_ALIGNMENT);
         persNameField.addActionListener(new ActionListener() {
             
