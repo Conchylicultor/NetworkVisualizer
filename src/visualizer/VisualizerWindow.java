@@ -53,6 +53,8 @@ public class VisualizerWindow extends JFrame {
     private JCheckBox hideNamedSequence;
     private JCheckBox plotNameColors;
     
+    private SequenceImagesPane sequenceImagesPane;
+    
 	public VisualizerWindow() {
 		// ----- General informations -----
 		
@@ -107,7 +109,7 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Sequence images: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
-        //controlPanel.add(seqImagePane);
+        controlPanel.add(sequenceImagesPane);
         //controlPanel.add(Box.createVerticalGlue());
         
         // ----- Assemble the global ui -----
@@ -174,7 +176,7 @@ public class VisualizerWindow extends JFrame {
                         }
                         
                         // Update the sequence pane
-                        //seqImagePane.setSeqId(vertex.getSeqId());
+                        sequenceImagesPane.setSequence(vertex.getSeqId());
                     }
                     else
                     {
@@ -189,10 +191,10 @@ public class VisualizerWindow extends JFrame {
                         }
                         
                         // Update the sequence pane
-                        //if(pickedVertexList.isEmpty())
-                        //{
-                        //    seqImagePane.setSeqId("");
-                        //}
+                        if(pickedVertexList.isEmpty())
+                        {
+                            sequenceImagesPane.setSequence("");
+                        }
                     }
                     // The parent function will repaint the graph
                 }
@@ -301,6 +303,8 @@ public class VisualizerWindow extends JFrame {
                             else
                             {
                                 sequenceGraph.addEdge(new Edge(maxWeightValue), vertexI, vertexJ);
+                                vertexI.neighborSelected();
+                                vertexJ.neighborSelected();
                             }
                         }
                     }
@@ -355,5 +359,8 @@ public class VisualizerWindow extends JFrame {
                 networkCanvas.repaint();
             }
         });
+        
+        
+        sequenceImagesPane = new SequenceImagesPane();
 	}
 }

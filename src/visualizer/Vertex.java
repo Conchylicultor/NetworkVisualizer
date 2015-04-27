@@ -174,6 +174,12 @@ public class Vertex {
             updateIcon();
     }
 
+    public String getSeqId() {
+        if(seqId == null)
+            return "";
+        return seqId;
+    }
+
     public String getPersName() {
         if(persName == null)
             return "";
