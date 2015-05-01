@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +23,10 @@ import edu.uci.ics.jung.visualization.LayeredIcon;
 public class Vertex {
     private String persName;
     private String seqId;
+    private int date;
+
+    private static int minDate = 0;
+    private static int maxDate = 0;
     
     private BufferedImage bufferIcon;
     private Icon plottedIcon; // Icon after modifications (adding borders,...)
@@ -29,6 +35,8 @@ public class Vertex {
     private boolean plotNameColor = false;
     private boolean isSelected = false;
     private int nbNeighborSelected = 0;
+    
+    private List<Edge> filteredDateEdgeList = new ArrayList<>();
     
     public static Factory<Vertex> getFactory() {
         return new Factory<Vertex>() {
@@ -122,8 +130,10 @@ public class Vertex {
     public void setLabel(String transform) {
         Pattern persPattern = Pattern.compile("pers:(\\S+)");
         Pattern seqPattern = Pattern.compile("seq:(\\S+)");
+        Pattern datePattern = Pattern.compile("date:(\\S+)");
         Matcher persMatcher = persPattern.matcher(transform);
         Matcher seqMatcher = seqPattern.matcher(transform);
+        Matcher dateMatcher = datePattern.matcher(transform);
 
         if(persMatcher.find())
         {
@@ -142,6 +152,18 @@ public class Vertex {
             } catch(Exception ex) {
                 System.err.println("Cannot load " + name);
                 System.err.println(ex.getMessage());
+            }
+        }
+        if(dateMatcher.find())
+        {
+            date = Integer.decode(dateMatcher.group(1));
+            if(minDate == 0 || date < minDate)
+            {
+                minDate = date;
+            }
+            if(maxDate == 0 || date > minDate)
+            {
+                maxDate = date;
             }
         }
     }
@@ -190,6 +212,22 @@ public class Vertex {
         this.persName = persName;
         if(plotNameColor || isHidden)
             updateIcon();
+    }
+    
+    public static int getMinDate() {
+        return minDate;
+    }
+
+    public static int getMaxDate() {
+        return maxDate;
+    }
+
+    public int getDate() {
+        return date;
+    }
+
+    public List<Edge> getFilteredDateEdgeList() {
+        return filteredDateEdgeList;
     }
 
 }

@@ -10,6 +10,8 @@ public class Edge {
     
     private float weight;
     
+    private Vertex filteredDateVertex;
+
     public Edge() {
         this(0.f);
     }
@@ -40,5 +42,13 @@ public class Edge {
 	public void setWeight(float floatValue) {
 	    weight = floatValue;
 	}
+    
+    public Vertex getFilteredDateVertex() {
+        return filteredDateVertex;
+    }
+
+    public void setFilteredDateVertex(Vertex filteredDateVertex) {
+        this.filteredDateVertex = filteredDateVertex;
+    }
 
 }

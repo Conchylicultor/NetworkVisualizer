@@ -9,7 +9,9 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -23,7 +25,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.util.MapSettableTransformer;
@@ -53,6 +58,8 @@ public class VisualizerWindow extends JFrame {
     private JButton mergeButton;
     private JCheckBox hideNamedSequence;
     private JCheckBox plotNameColors;
+    private JSlider minDateSlider;
+    private JSlider maxDateSlider;
     
     private SequenceImagesPane sequenceImagesPane;
     
@@ -89,7 +96,8 @@ public class VisualizerWindow extends JFrame {
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         
         JPanel controlPanel = new JPanel();
-        controlPanel.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
+        controlPanel.setMaximumSize(new Dimension(250, Integer.MAX_VALUE));
+        controlPanel.setPreferredSize(new Dimension(250, Integer.MAX_VALUE));
         controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         BoxLayout controlPanelLayout = new BoxLayout(controlPanel, BoxLayout.Y_AXIS);
         controlPanel.setLayout(controlPanelLayout);
@@ -109,6 +117,14 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(mergeButton);
         controlPanel.add(hideNamedSequence);
         controlPanel.add(plotNameColors);
+        if(Vertex.getMaxDate() != 0)
+        {
+            controlPanel.add(Box.createVerticalStrut(spacerSize));
+            controlPanel.add(new JLabel("Date Filter: "));
+            controlPanel.add(Box.createVerticalStrut(spacerSize));
+            controlPanel.add(minDateSlider);
+            controlPanel.add(maxDateSlider);
+        }
         //controlPanel.add(new JButton("Save"));
         
         controlPanel.add(Box.createVerticalStrut(spacerSize));
@@ -365,6 +381,100 @@ public class VisualizerWindow extends JFrame {
         });
         
         
+        minDateSlider = new JSlider(Vertex.getMinDate(), Vertex.getMaxDate(), Vertex.getMinDate());
+        maxDateSlider = new JSlider(Vertex.getMinDate(), Vertex.getMaxDate(), Vertex.getMaxDate());
+        
+        minDateSlider.setMajorTickSpacing(60*60);
+        minDateSlider.setMinorTickSpacing(60);
+        minDateSlider.setPaintTicks(true);
+        
+        maxDateSlider.setMajorTickSpacing(60*60);
+        maxDateSlider.setMinorTickSpacing(60);
+        maxDateSlider.setPaintTicks(true);
+        
+        minDateSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (!minDateSlider.getValueIsAdjusting()) {
+                    updateFilterDateGraph();
+                }
+            }
+        });
+        
+        maxDateSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (!maxDateSlider.getValueIsAdjusting()) {
+                    updateFilterDateGraph();
+                }
+            }
+        });
+        
+        
         sequenceImagesPane = new SequenceImagesPane();
+	}
+	
+	List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
+	void updateFilterDateGraph()
+	{
+	    // ----- Unpick all -----
+	    Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
+	    //pickedVertex.addAll(pickedState.getPicked());
+	    for(Vertex vertex : pickedVertex)
+	    {
+	        pickedState.pick(vertex, false);
+	    }
+	    
+	    // ----- Filter new vertices -----
+	    for(Vertex vertex : sequenceGraph.getVertices())
+	    {
+	        if(vertex.getDate() < minDateSlider.getValue() || vertex.getDate() > maxDateSlider.getValue()) // Out of range
+	        {
+	            filterDateVertricesList.add(vertex);
+	            // Save the associated edges
+	            for(Edge edge : sequenceGraph.getIncidentEdges(vertex))
+	            {
+	                edge.setFilteredDateVertex(sequenceGraph.getOpposite(vertex, edge));
+	                vertex.getFilteredDateEdgeList().add(edge);
+	            }
+
+                // Remove the associated edges
+                for(Edge edge : vertex.getFilteredDateEdgeList())
+                {
+                    sequenceGraph.removeEdge(edge);
+                }
+	        }
+	    }
+	    
+	    // ----- Restore the filtered vertices -----
+        for(Vertex vertex : filterDateVertricesList)
+        {
+            if(vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) // Out of range
+            {
+                sequenceGraph.addVertex(vertex);
+                // Restore the edges
+                for(Edge edge : vertex.getFilteredDateEdgeList())
+                {
+                    if(sequenceGraph.containsVertex(edge.getFilteredDateVertex())) // Add the vertex to the graph
+                    {
+                        sequenceGraph.addEdge(edge, vertex, edge.getFilteredDateVertex());
+                        edge.setFilteredDateVertex(null);
+                    }
+                    else // Or transfer the edge
+                    {
+                        edge.getFilteredDateVertex().getFilteredDateEdgeList().add(edge);
+                        edge.setFilteredDateVertex(vertex);
+                    }
+                }
+                
+                vertex.getFilteredDateEdgeList().clear();
+            }
+            else
+            {
+                sequenceGraph.removeVertex(vertex);
+            }
+        }
+        
+        networkCanvas.repaint();
 	}
 }

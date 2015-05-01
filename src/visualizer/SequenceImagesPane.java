@@ -89,8 +89,8 @@ public class SequenceImagesPane extends JPanel
                         imagesList.add(ImageIO.read(new File(imagesPath + sequenceImageStrings.get(i))));
                         compomentWidth += imagesList.get(imagesList.size() - 1).getWidth();
                     }
-                    setPreferredSize(new Dimension(compomentWidth, getPreferredSize().height));
-                    setSize(new Dimension(compomentWidth, getPreferredSize().height));
+                    //setPreferredSize(new Dimension(compomentWidth, getPreferredSize().height));
+                    //setSize(new Dimension(compomentWidth, getPreferredSize().height));
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 } catch (Exception e1) {
