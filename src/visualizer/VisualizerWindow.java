@@ -31,6 +31,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.util.MapSettableTransformer;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
@@ -41,7 +42,9 @@ import edu.uci.ics.jung.visualization.control.PluggableGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.control.ViewScalingControl;
+import edu.uci.ics.jung.visualization.layout.LayoutTransition;
 import edu.uci.ics.jung.visualization.picking.PickedState;
+import edu.uci.ics.jung.visualization.util.Animator;
 
 public class VisualizerWindow extends JFrame {
 
@@ -60,6 +63,7 @@ public class VisualizerWindow extends JFrame {
     private JCheckBox plotNameColors;
     private JSlider minDateSlider;
     private JSlider maxDateSlider;
+    private JButton adjustGravityButton;
     
     private SequenceImagesPane sequenceImagesPane;
     
@@ -117,6 +121,7 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(mergeButton);
         controlPanel.add(hideNamedSequence);
         controlPanel.add(plotNameColors);
+        controlPanel.add(adjustGravityButton);
         if(Vertex.getMaxDate() != 0)
         {
             controlPanel.add(Box.createVerticalStrut(spacerSize));
@@ -376,6 +381,25 @@ public class VisualizerWindow extends JFrame {
                         currentVertex.setPlotNameColor(false);
                     }
                 }
+                networkCanvas.repaint();
+            }
+        });
+        
+        
+        adjustGravityButton = new JButton("Adjust gravity");
+        adjustGravityButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                Layout<Vertex,Edge> newlayout = new KKLayout<Vertex,Edge>(sequenceGraph);
+                newlayout.setInitializer(networkCanvas.getGraphLayout());
+                newlayout.setSize(networkCanvas.getSize());
+                
+                LayoutTransition<Vertex,Edge> transition =
+                    new LayoutTransition<Vertex,Edge>(networkCanvas, networkCanvas.getGraphLayout(), newlayout);
+                Animator animator = new Animator(transition);
+                animator.start();
+                
+                networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those line ?
                 networkCanvas.repaint();
             }
         });
