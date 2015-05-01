@@ -30,8 +30,11 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.SpringLayout;
 import edu.uci.ics.jung.algorithms.util.MapSettableTransformer;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
@@ -63,6 +66,7 @@ public class VisualizerWindow extends JFrame {
     private JCheckBox plotNameColors;
     private JSlider minDateSlider;
     private JSlider maxDateSlider;
+    private JComboBox<String> layoutChoiceComboBox;
     private JButton adjustGravityButton;
     
     private SequenceImagesPane sequenceImagesPane;
@@ -121,6 +125,8 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(mergeButton);
         controlPanel.add(hideNamedSequence);
         controlPanel.add(plotNameColors);
+        controlPanel.add(Box.createVerticalStrut(spacerSize));
+        controlPanel.add(layoutChoiceComboBox);
         controlPanel.add(adjustGravityButton);
         if(Vertex.getMaxDate() != 0)
         {
@@ -232,7 +238,6 @@ public class VisualizerWindow extends JFrame {
         persNameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, persNameField.getPreferredSize().height));
         persNameField.setAlignmentX(Component.LEFT_ALIGNMENT);
         persNameField.addActionListener(new ActionListener() {
-            
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Rename the current selection
@@ -386,32 +391,38 @@ public class VisualizerWindow extends JFrame {
         });
         
         
+        layoutChoiceComboBox = new JComboBox<String>();
+        layoutChoiceComboBox.addItem("KKLayout");
+        layoutChoiceComboBox.addItem("FRLayout");
+        layoutChoiceComboBox.addItem("SpringLayout");
+        layoutChoiceComboBox.addItem("ISOMLayout");
+        layoutChoiceComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, persNameField.getPreferredSize().height));
+        layoutChoiceComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        layoutChoiceComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateLayoutGraph();
+            }
+        }); 
+        
+        
         adjustGravityButton = new JButton("Adjust gravity");
         adjustGravityButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                Layout<Vertex,Edge> newlayout = new KKLayout<Vertex,Edge>(sequenceGraph);
-                newlayout.setInitializer(networkCanvas.getGraphLayout());
-                newlayout.setSize(networkCanvas.getSize());
-                
-                LayoutTransition<Vertex,Edge> transition =
-                    new LayoutTransition<Vertex,Edge>(networkCanvas, networkCanvas.getGraphLayout(), newlayout);
-                Animator animator = new Animator(transition);
-                animator.start();
-                
-                networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those line ?
-                networkCanvas.repaint();
+                updateLayoutGraph();
             }
         });
         
         
         minDateSlider = new JSlider(Vertex.getMinDate(), Vertex.getMaxDate(), Vertex.getMinDate());
-        maxDateSlider = new JSlider(Vertex.getMinDate(), Vertex.getMaxDate(), Vertex.getMaxDate());
-        
+        minDateSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
         minDateSlider.setMajorTickSpacing(60*60);
         minDateSlider.setMinorTickSpacing(60);
         minDateSlider.setPaintTicks(true);
-        
+
+        maxDateSlider = new JSlider(Vertex.getMinDate(), Vertex.getMaxDate(), Vertex.getMaxDate());
+        maxDateSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
         maxDateSlider.setMajorTickSpacing(60*60);
         maxDateSlider.setMinorTickSpacing(60);
         maxDateSlider.setPaintTicks(true);
@@ -437,6 +448,43 @@ public class VisualizerWindow extends JFrame {
         
         sequenceImagesPane = new SequenceImagesPane();
 	}
+	
+    void updateLayoutGraph()
+    {
+        Layout<Vertex,Edge> newlayout = null;
+        if(((String)layoutChoiceComboBox.getSelectedItem()).equals("FRLayout"))
+        {
+            newlayout = new FRLayout<Vertex,Edge>(sequenceGraph);
+            ((FRLayout<Vertex,Edge>)newlayout).setMaxIterations(200);
+        }
+        else if(((String)layoutChoiceComboBox.getSelectedItem()).equals("KKLayout"))
+        {
+            newlayout = new KKLayout<Vertex,Edge>(sequenceGraph);
+            ((KKLayout<Vertex,Edge>)newlayout).setMaxIterations(200);
+        }
+        else if(((String)layoutChoiceComboBox.getSelectedItem()).equals("SpringLayout"))
+        {
+            newlayout = new SpringLayout<Vertex,Edge>(sequenceGraph);
+        }
+        else if(((String)layoutChoiceComboBox.getSelectedItem()).equals("ISOMLayout"))
+        {
+            newlayout = new ISOMLayout<Vertex,Edge>(sequenceGraph);
+        }
+        else
+        {
+            throw new Error("Error choice: wrong layout name");
+        }
+        newlayout.setInitializer(networkCanvas.getGraphLayout());
+        newlayout.setSize(networkCanvas.getSize());
+        
+        LayoutTransition<Vertex,Edge> transition =
+            new LayoutTransition<Vertex,Edge>(networkCanvas, networkCanvas.getGraphLayout(), newlayout);
+        Animator animator = new Animator(transition);
+        animator.start();
+        
+        networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those line ?
+        networkCanvas.repaint();
+    }
 	
 	List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
 	void updateFilterDateGraph()
