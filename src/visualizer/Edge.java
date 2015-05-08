@@ -38,11 +38,15 @@ public class Edge {
             }
         };
     }
+    
+    public float getWeight() {
+        return weight;
+    }
 
 	public void setWeight(float floatValue) {
 	    weight = floatValue;
 	}
-    
+
     public Vertex getFilteredDateVertex() {
         return filteredDateVertex;
     }

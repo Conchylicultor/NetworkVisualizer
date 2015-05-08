@@ -21,6 +21,8 @@ import org.apache.commons.collections15.Transformer;
 import edu.uci.ics.jung.visualization.LayeredIcon;
 
 public class Vertex {
+    private int id;
+    
     private String persName;
     private String seqId;
     private int date;
@@ -196,6 +198,14 @@ public class Vertex {
             updateIcon();
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getSeqId() {
         if(seqId == null)
             return "";
@@ -230,4 +240,22 @@ public class Vertex {
         return filteredDateEdgeList;
     }
 
+    public String getLabel() {
+        String label = new String();
+        
+        if(seqId != null && !seqId.isEmpty())
+        {
+            label += " seq:" + seqId;
+        }
+        if(persName != null && !persName.isEmpty())
+        {
+            label += " pers:" + persName;
+        }
+        if(date > 0)
+        {
+            label += " date:" + date;
+        }
+        
+        return label;
+    }
 }

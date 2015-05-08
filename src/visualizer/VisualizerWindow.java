@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import edu.uci.ics.jung.algorithms.layout.SpringLayout;
 import edu.uci.ics.jung.algorithms.util.MapSettableTransformer;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
+import edu.uci.ics.jung.graph.util.Pair;
 import edu.uci.ics.jung.io.PajekNetReader;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.PickingGraphMousePlugin;
@@ -70,6 +72,8 @@ public class VisualizerWindow extends JFrame {
     private JButton adjustGravityButton;
     
     private SequenceImagesPane sequenceImagesPane;
+    
+    private JButton saveButton;
     
 	public VisualizerWindow() {
 		// ----- General informations -----
@@ -142,6 +146,9 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(new JLabel("Sequence images: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(sequenceImagesScrollPane);
+        
+        controlPanel.add(Box.createVerticalStrut(spacerSize));
+        controlPanel.add(saveButton);
         
         // ----- Assemble the global ui -----
         
@@ -403,7 +410,7 @@ public class VisualizerWindow extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 updateLayoutGraph();
             }
-        }); 
+        });
         
         
         adjustGravityButton = new JButton("Adjust gravity");
@@ -447,9 +454,44 @@ public class VisualizerWindow extends JFrame {
         
         
         sequenceImagesPane = new SequenceImagesPane();
+        
+        
+        saveButton = new JButton("Save");
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                try 
+                {
+                    FileWriter saveFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/Debug/network_save.net");
+                    
+                    saveFile.write("*Vertices " + sequenceGraph.getVertexCount() + "\n");
+                    int i = 1;
+                    for(Vertex vertex : sequenceGraph.getVertices())
+                    {
+                        vertex.setId(i);
+                        saveFile.write(i + " \"" + vertex.getLabel() + "\"\n");
+                        i++;
+                    }
+
+                    saveFile.write("*Edges\n");
+                    for(Edge edge : sequenceGraph.getEdges())
+                    {
+                        Pair<Vertex> pair = sequenceGraph.getEndpoints(edge);
+                        saveFile.write(pair.getFirst().getId() + " " + pair.getSecond().getId() + " " + edge.getWeight() + "\n");
+                    }
+                    
+                    saveFile.close();
+                }
+                catch (IOException e) 
+                {
+                    System.err.println("Cannot save the network (path incorrect)");
+                    e.printStackTrace();
+                }
+            }
+        });
 	}
 	
-    void updateLayoutGraph()
+    private void updateLayoutGraph()
     {
         Layout<Vertex,Edge> newlayout = null;
         if(((String)layoutChoiceComboBox.getSelectedItem()).equals("FRLayout"))
@@ -482,12 +524,12 @@ public class VisualizerWindow extends JFrame {
         Animator animator = new Animator(transition);
         animator.start();
         
-        networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those line ?
+        networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those lines ?
         networkCanvas.repaint();
     }
 	
-	List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
-	void updateFilterDateGraph()
+    private List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
+	private void updateFilterDateGraph()
 	{
 	    // ----- Unpick all -----
 	    Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
