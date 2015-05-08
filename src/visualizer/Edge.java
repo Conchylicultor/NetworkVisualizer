@@ -6,11 +6,14 @@ import java.awt.Paint;
 import org.apache.commons.collections15.Factory;
 import org.apache.commons.collections15.Transformer;
 
+import edu.uci.ics.jung.graph.util.Pair;
+
 public class Edge {
     
     private float weight;
     
     private Vertex filteredDateVertex;
+    private Pair<Vertex> filterWeightEndpointsSave;
 
     public Edge() {
         this(0.f);
@@ -53,6 +56,14 @@ public class Edge {
 
     public void setFilteredDateVertex(Vertex filteredDateVertex) {
         this.filteredDateVertex = filteredDateVertex;
+    }
+
+    public Pair<Vertex> getFilterWeightEndpointsSave() {
+        return filterWeightEndpointsSave;
+    }
+
+    public void setFilterWeightEndpointsSave(Pair<Vertex> filterWeightEndpointsSave) {
+        this.filterWeightEndpointsSave = filterWeightEndpointsSave;
     }
 
 }

@@ -68,6 +68,7 @@ public class VisualizerWindow extends JFrame {
     private JCheckBox plotNameColors;
     private JSlider minDateSlider;
     private JSlider maxDateSlider;
+    private JSlider weightFilterSlider;
     private JComboBox<String> layoutChoiceComboBox;
     private JButton adjustGravityButton;
     
@@ -140,7 +141,10 @@ public class VisualizerWindow extends JFrame {
             controlPanel.add(minDateSlider);
             controlPanel.add(maxDateSlider);
         }
-        //controlPanel.add(new JButton("Save"));
+        controlPanel.add(Box.createVerticalStrut(spacerSize));
+        controlPanel.add(new JLabel("Weight Filter: "));
+        controlPanel.add(Box.createVerticalStrut(spacerSize));
+        controlPanel.add(weightFilterSlider);
         
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Sequence images: "));
@@ -453,10 +457,65 @@ public class VisualizerWindow extends JFrame {
         });
         
         
+        weightFilterSlider = new JSlider(0, 200, 0);
+        weightFilterSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
+        weightFilterSlider.setMajorTickSpacing(100);
+        weightFilterSlider.setMinorTickSpacing(20);
+        weightFilterSlider.setPaintTicks(true);
+        weightFilterSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (!weightFilterSlider.getValueIsAdjusting()) {
+                    // TODO: Filter/restore also when other filters are changed !!!
+                    
+                    // ----- Unpick all -----
+                    Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
+                    //pickedVertex.addAll(pickedState.getPicked());
+                    for(Vertex vertex : pickedVertex)
+                    {
+                        pickedState.pick(vertex, false);
+                    }
+                    
+                    float threasholdValue = weightFilterSlider.getValue() / 100.f;
+                    
+                    // ----- Filter new edges -----
+                    for(Edge edge : sequenceGraph.getEdges())
+                    {
+                        if(edge.getWeight() < threasholdValue) // Out of range
+                        {
+                            filterWeightEdgesList.add(edge);
+                            // Save the associated vertex
+                            edge.setFilterWeightEndpointsSave(sequenceGraph.getEndpoints(edge));
+                        }
+                    }
+                    
+                    // ----- Restore the filtered edges -----
+                    List<Edge> edgesToRemoveList = new ArrayList<>();
+                    for(Edge edge : filterWeightEdgesList)
+                    {
+                        if(edge.getWeight() >= threasholdValue) // In range
+                        {
+                            sequenceGraph.addEdge(edge, edge.getFilterWeightEndpointsSave());
+                            edge.setFilterWeightEndpointsSave(null);
+                            edgesToRemoveList.add(edge);
+                        }
+                        else
+                        {
+                            sequenceGraph.removeEdge(edge);
+                        }
+                    }
+                    filterWeightEdgesList.removeAll(edgesToRemoveList);
+                    
+                    networkCanvas.repaint();
+                }
+            }
+        });
+        
+        
         sequenceImagesPane = new SequenceImagesPane();
         
         
-        saveButton = new JButton("Save");
+        saveButton = new JButton("Save (current)");
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -527,7 +586,9 @@ public class VisualizerWindow extends JFrame {
         networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those lines ?
         networkCanvas.repaint();
     }
-	
+
+    private List<Edge> filterWeightEdgesList = new ArrayList<Edge>();
+    
     private List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
 	private void updateFilterDateGraph()
 	{
@@ -563,7 +624,7 @@ public class VisualizerWindow extends JFrame {
 	    // ----- Restore the filtered vertices -----
         for(Vertex vertex : filterDateVertricesList)
         {
-            if(vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) // Out of range
+            if(vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) // In range
             {
                 sequenceGraph.addVertex(vertex);
                 // Restore the edges
