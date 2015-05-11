@@ -12,8 +12,7 @@ public class Edge {
     
     private float weight;
     
-    private Vertex filteredDateVertex;
-    private Pair<Vertex> filterWeightEndpointsSave;
+    private Pair<Vertex> endpointsSave;
 
     public Edge() {
         this(0.f);
@@ -50,20 +49,12 @@ public class Edge {
 	    weight = floatValue;
 	}
 
-    public Vertex getFilteredDateVertex() {
-        return filteredDateVertex;
+    public Pair<Vertex> getEndpointsSave() {
+        return endpointsSave;
     }
 
-    public void setFilteredDateVertex(Vertex filteredDateVertex) {
-        this.filteredDateVertex = filteredDateVertex;
-    }
-
-    public Pair<Vertex> getFilterWeightEndpointsSave() {
-        return filterWeightEndpointsSave;
-    }
-
-    public void setFilterWeightEndpointsSave(Pair<Vertex> filterWeightEndpointsSave) {
-        this.filterWeightEndpointsSave = filterWeightEndpointsSave;
+    public void setEndpointsSave(Pair<Vertex> endpointsSave) {
+        this.endpointsSave = endpointsSave;
     }
 
 }

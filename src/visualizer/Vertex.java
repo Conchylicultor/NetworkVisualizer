@@ -38,8 +38,6 @@ public class Vertex {
     private boolean isSelected = false;
     private int nbNeighborSelected = 0;
     
-    private List<Edge> filteredDateEdgeList = new ArrayList<>();
-    
     public static Factory<Vertex> getFactory() {
         return new Factory<Vertex>() {
             public Vertex create() {
@@ -234,10 +232,6 @@ public class Vertex {
 
     public int getDate() {
         return date;
-    }
-
-    public List<Edge> getFilteredDateEdgeList() {
-        return filteredDateEdgeList;
     }
 
     public String getLabel() {

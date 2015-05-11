@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -330,7 +331,7 @@ public class VisualizerWindow extends JFrame {
         mergeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                final float maxWeightValue = 2.f; // TODO : Define max value
+                final float maxWeightValue = 2.f; // TODO : Define max value (Warning: either update the edge filter after or define this value as not filterable)
                 for(Vertex vertexI : pickedVertexList)
                 {
                     for(Vertex vertexJ : pickedVertexList)
@@ -442,7 +443,10 @@ public class VisualizerWindow extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 if (!minDateSlider.getValueIsAdjusting()) {
-                    updateFilterDateGraph();
+                    unpickAll();
+                    updateFilterVertexGraph();
+                    updateFilterEdgeGraph();
+                    networkCanvas.repaint();
                 }
             }
         });
@@ -451,7 +455,10 @@ public class VisualizerWindow extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 if (!maxDateSlider.getValueIsAdjusting()) {
-                    updateFilterDateGraph();
+                    unpickAll();
+                    updateFilterVertexGraph();
+                    updateFilterEdgeGraph();
+                    networkCanvas.repaint();
                 }
             }
         });
@@ -466,46 +473,8 @@ public class VisualizerWindow extends JFrame {
             @Override
             public void stateChanged(ChangeEvent e) {
                 if (!weightFilterSlider.getValueIsAdjusting()) {
-                    // TODO: Filter/restore also when other filters are changed !!!
-                    
-                    // ----- Unpick all -----
-                    Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
-                    //pickedVertex.addAll(pickedState.getPicked());
-                    for(Vertex vertex : pickedVertex)
-                    {
-                        pickedState.pick(vertex, false);
-                    }
-                    
-                    float threasholdValue = weightFilterSlider.getValue() / 100.f;
-                    
-                    // ----- Filter new edges -----
-                    for(Edge edge : sequenceGraph.getEdges())
-                    {
-                        if(edge.getWeight() < threasholdValue) // Out of range
-                        {
-                            filterWeightEdgesList.add(edge);
-                            // Save the associated vertex
-                            edge.setFilterWeightEndpointsSave(sequenceGraph.getEndpoints(edge));
-                        }
-                    }
-                    
-                    // ----- Restore the filtered edges -----
-                    List<Edge> edgesToRemoveList = new ArrayList<>();
-                    for(Edge edge : filterWeightEdgesList)
-                    {
-                        if(edge.getWeight() >= threasholdValue) // In range
-                        {
-                            sequenceGraph.addEdge(edge, edge.getFilterWeightEndpointsSave());
-                            edge.setFilterWeightEndpointsSave(null);
-                            edgesToRemoveList.add(edge);
-                        }
-                        else
-                        {
-                            sequenceGraph.removeEdge(edge);
-                        }
-                    }
-                    filterWeightEdgesList.removeAll(edgesToRemoveList);
-                    
+                    unpickAll();
+                    updateFilterEdgeGraph();
                     networkCanvas.repaint();
                 }
             }
@@ -586,70 +555,99 @@ public class VisualizerWindow extends JFrame {
         networkCanvas.getRenderContext().getMultiLayerTransformer().setToIdentity(); // What is the use of those lines ?
         networkCanvas.repaint();
     }
-
-    private List<Edge> filterWeightEdgesList = new ArrayList<Edge>();
+	
+    Collection<Vertex> filteredVertexList = new LinkedHashSet<>();
+    Collection<Edge> filteredEdgeList = new LinkedHashSet<>(); // LinkedHashSet automatically remove the duplicate
     
-    private List<Vertex> filterDateVertricesList = new ArrayList<Vertex>();
-	private void updateFilterDateGraph()
-	{
-	    // ----- Unpick all -----
-	    Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
-	    //pickedVertex.addAll(pickedState.getPicked());
-	    for(Vertex vertex : pickedVertex)
-	    {
-	        pickedState.pick(vertex, false);
-	    }
-	    
-	    // ----- Filter new vertices -----
-	    for(Vertex vertex : sequenceGraph.getVertices())
-	    {
-	        if(vertex.getDate() < minDateSlider.getValue() || vertex.getDate() > maxDateSlider.getValue()) // Out of range
-	        {
-	            filterDateVertricesList.add(vertex);
-	            // Save the associated edges
-	            for(Edge edge : sequenceGraph.getIncidentEdges(vertex))
-	            {
-	                edge.setFilteredDateVertex(sequenceGraph.getOpposite(vertex, edge));
-	                vertex.getFilteredDateEdgeList().add(edge);
-	            }
+    private void unpickAll()
+    {
+        Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
+        for(Vertex vertex : pickedVertex)
+        {
+            pickedState.pick(vertex, false);
+        }
+    }
+    
+    private void updateFilterVertexGraph()
+    {
+        List<Vertex> vertexToRemoveList = new ArrayList<Vertex>();
+        
+        // ----- Filter new vertices -----
+        for(Vertex vertex : sequenceGraph.getVertices())
+        {
+            // TODO: Filter also if "hide if selected" is selected ?
+            if(vertex.getDate() < minDateSlider.getValue() || vertex.getDate() > maxDateSlider.getValue()) // Out of range
+            {
+                filteredVertexList.add(vertex);
+                vertexToRemoveList.add(vertex);
 
-                // Remove the associated edges
-                for(Edge edge : vertex.getFilteredDateEdgeList())
+                // Filter the associated edges
+                for(Edge edge : sequenceGraph.getIncidentEdges(vertex))
                 {
-                    sequenceGraph.removeEdge(edge);
+                    filteredEdgeList.add(edge);
+                    edge.setEndpointsSave(sequenceGraph.getEndpoints(edge));
+                    // Not necessary to remove from the graph, the edges are removed when we remove the vertex
                 }
-	        }
-	    }
-	    
-	    // ----- Restore the filtered vertices -----
-        for(Vertex vertex : filterDateVertricesList)
+            }
+        }
+        
+        for(Vertex vertex : vertexToRemoveList)
+        {
+            sequenceGraph.removeVertex(vertex);
+        }
+        vertexToRemoveList.clear();
+        
+        // ----- Restore the filtered vertices -----
+        for(Vertex vertex : filteredVertexList)
         {
             if(vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) // In range
             {
                 sequenceGraph.addVertex(vertex);
-                // Restore the edges
-                for(Edge edge : vertex.getFilteredDateEdgeList())
-                {
-                    if(sequenceGraph.containsVertex(edge.getFilteredDateVertex())) // Add the vertex to the graph
-                    {
-                        sequenceGraph.addEdge(edge, vertex, edge.getFilteredDateVertex());
-                        edge.setFilteredDateVertex(null);
-                    }
-                    else // Or transfer the edge
-                    {
-                        edge.getFilteredDateVertex().getFilteredDateEdgeList().add(edge);
-                        edge.setFilteredDateVertex(vertex);
-                    }
-                }
-                
-                vertex.getFilteredDateEdgeList().clear();
-            }
-            else
-            {
-                sequenceGraph.removeVertex(vertex);
+                vertexToRemoveList.add(vertex);
             }
         }
         
-        networkCanvas.repaint();
-	}
+        filteredVertexList.removeAll(vertexToRemoveList);
+    }
+    
+    private void updateFilterEdgeGraph()
+    {
+        float thresholdValue = weightFilterSlider.getValue() / 100.f;
+        
+        List<Edge> edgesToRemoveList = new ArrayList<>();
+        
+        // ----- Filter new edges -----
+        for(Edge edge : sequenceGraph.getEdges())
+        {
+            if(edge.getWeight() < thresholdValue) // Filter if weight too small
+            {
+                filteredEdgeList.add(edge);
+                edge.setEndpointsSave(sequenceGraph.getEndpoints(edge));// Save the associated vertex
+                
+                edgesToRemoveList.add(edge);
+            }
+        }
+        
+        for(Edge edge : edgesToRemoveList)
+        {
+            sequenceGraph.removeEdge(edge);
+        }
+        edgesToRemoveList.clear();
+        
+        // ----- Restore the filtered edges -----
+        for(Edge edge : filteredEdgeList)
+        {
+            if(edge.getWeight() >= thresholdValue && // In range
+               sequenceGraph.containsVertex(edge.getEndpointsSave().getFirst()) &&
+               sequenceGraph.containsVertex(edge.getEndpointsSave().getSecond())) // and both endpoints presents
+            {
+                sequenceGraph.addEdge(edge, edge.getEndpointsSave());
+
+                edge.setEndpointsSave(null);
+                edgesToRemoveList.add(edge);
+            }
+        }
+        
+        filteredEdgeList.removeAll(edgesToRemoveList);
+    }
 }
