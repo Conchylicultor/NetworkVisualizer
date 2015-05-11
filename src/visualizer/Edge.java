@@ -34,9 +34,7 @@ public class Edge {
         // We only plot edges with strong weight
         return new Transformer<Edge, Paint>() {
             public Paint transform(Edge i) {
-                if(i.weight > 1.0)
-                    return Color.BLACK;
-                return new Color(1.f,1.f,1.f,0.f);
+                return Color.BLACK;
             }
         };
     }
