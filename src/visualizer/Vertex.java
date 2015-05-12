@@ -4,7 +4,10 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,7 +32,8 @@ public class Vertex {
 
     private static int minDate = 0;
     private static int maxDate = 0;
-    
+
+    private List<String> imageIdList = new ArrayList<>();
     private BufferedImage bufferIcon;
     private Icon plottedIcon; // Icon after modifications (adding borders,...)
     
@@ -143,14 +147,25 @@ public class Vertex {
         {
             seqId = seqMatcher.group(1);
             
+            // Load all image id of the sequence
+            try (BufferedReader br = new BufferedReader(new FileReader("/home/etienne/__A__/Dev/Reidentification/Data/Traces/" + seqId + "_list.txt"))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    imageIdList.add(line);
+                }
+            } catch (IOException e) {
+                System.err.println("Cannot load sequence " + seqId);
+                System.err.println(e.getMessage());
+            }
+            
             // Load icon
-            String name = "/home/etienne/__A__/Dev/Reidentification/Data/Traces/" + seqId + ".png";
+            String iconPath = "/home/etienne/__A__/Dev/Reidentification/Data/Traces/" + imageIdList.get(imageIdList.size()/2) + ".png";
             try {
-                bufferIcon = ImageIO.read(new File(name)); // Buffer will contain the original image (before transformations)
+                bufferIcon = ImageIO.read(new File(iconPath)); // Buffer will contain the original image (before transformations)
 
                 updateIcon();
             } catch(Exception ex) {
-                System.err.println("Cannot load " + name);
+                System.err.println("Cannot load icon " + iconPath);
                 System.err.println(ex.getMessage());
             }
         }
@@ -204,10 +219,8 @@ public class Vertex {
         this.id = id;
     }
 
-    public String getSeqId() {
-        if(seqId == null)
-            return "";
-        return seqId;
+    public List<String> getImageIdList() {
+        return imageIdList;
     }
 
     public String getPersName() {

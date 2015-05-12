@@ -219,7 +219,7 @@ public class VisualizerWindow extends JFrame {
                         }
                         
                         // Update the sequence pane
-                        sequenceImagesPane.setSequence(vertex.getSeqId());
+                        sequenceImagesPane.setSequence(vertex.getImageIdList());
                     }
                     else
                     {
@@ -236,7 +236,7 @@ public class VisualizerWindow extends JFrame {
                         // Update the sequence pane
                         if(pickedVertexList.isEmpty())
                         {
-                            sequenceImagesPane.setSequence("");
+                            sequenceImagesPane.setSequence(null);
                         }
                     }
                     // The parent function will repaint the graph
