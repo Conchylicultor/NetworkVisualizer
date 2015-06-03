@@ -177,9 +177,9 @@ public class VisualizerWindow extends JFrame {
         fileReader.setEdgeWeightTransformer(new MapSettableTransformer<Edge, Number>(new HashMap<Edge, Number>()));
         
         try {
-            fileReader.load("/home/etienne/__A__/Dev/Reidentification/Data/Debug/network.net", sequenceGraph);
+            fileReader.load("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/network.net", sequenceGraph);
         } catch (IOException e) {
-            System.err.println("Cannot load network file");
+            System.err.println("Cannot load the network file");
             e.printStackTrace();
         }
 
@@ -490,7 +490,7 @@ public class VisualizerWindow extends JFrame {
             public void actionPerformed(ActionEvent arg0) {
                 try 
                 {
-                    FileWriter saveFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/Debug/network_save.net");
+                    FileWriter saveFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/network_save.net");
                     
                     saveFile.write("*Vertices " + sequenceGraph.getVertexCount() + "\n");
                     int i = 1;
