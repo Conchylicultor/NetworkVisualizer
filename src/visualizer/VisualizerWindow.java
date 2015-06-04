@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -63,6 +64,7 @@ public class VisualizerWindow extends JFrame {
     
     private JComboBox<String> persNameField;
     private JButton selectAllSimilarButton;
+    private JButton selectAllConnectedButton;
     private JButton disconnectButton;
     private JButton mergeButton;
     private JCheckBox hideNamedSequence;
@@ -127,6 +129,7 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(new JLabel("Controls: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(selectAllSimilarButton);
+        controlPanel.add(selectAllConnectedButton);
         controlPanel.add(disconnectButton);
         controlPanel.add(mergeButton);
         controlPanel.add(hideNamedSequence);
@@ -292,6 +295,40 @@ public class VisualizerWindow extends JFrame {
                         {
                             pickedState.pick(currentVertex, true); // Will repaint the graph
                         }
+                    }
+                }
+            }
+        });
+        
+        
+        selectAllConnectedButton = new JButton("Select all connected");
+        selectAllConnectedButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                if(pickedVertexList.size() > 0)
+                {
+                    List<Vertex> computedList = new ArrayList<Vertex>(); // Once selected, the sequence is added to this list (in order to avoid to be computed multiple times)
+                    LinkedList<Vertex> toComputeList = new LinkedList<Vertex>(); // Future vertex we have to select
+                    
+                    toComputeList.add(pickedVertexList.get(0)); // We pick the first selected person
+                    while(!toComputeList.isEmpty())
+                    {
+                    	Vertex currentVertex = toComputeList.getFirst();
+                    	
+                    	pickedState.pick(currentVertex, true);
+                    	
+                    	// Add all new neighbors to the list for future selection
+                    	for(Vertex potentialVertex : sequenceGraph.getNeighbors(currentVertex))
+                    	{
+                    		if(!computedList.contains(potentialVertex) && !toComputeList.contains(potentialVertex))
+                    		{
+                    			toComputeList.add(potentialVertex);
+                    		}
+                    		// Otherwise, the potential vertex has already been added
+                    	}
+                    	
+                    	computedList.add(currentVertex);
+                    	toComputeList.removeFirst();
                     }
                 }
             }
