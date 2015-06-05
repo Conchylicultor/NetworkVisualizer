@@ -528,6 +528,7 @@ public class VisualizerWindow extends JFrame {
                 try 
                 {
                     FileWriter saveFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/network_save.net");
+                    FileWriter saveLabelizedTraceFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/trace_labelized.txt");
                     
                     saveFile.write("*Vertices " + sequenceGraph.getVertexCount() + "\n");
                     int i = 1;
@@ -535,6 +536,7 @@ public class VisualizerWindow extends JFrame {
                     {
                         vertex.setId(i);
                         saveFile.write(i + " \"" + vertex.getLabel() + " \"\n");
+                        saveLabelizedTraceFile.write("----- " + vertex.getTraceLabel() + " -----\n");
                         i++;
                     }
 
@@ -546,6 +548,7 @@ public class VisualizerWindow extends JFrame {
                     }
                     
                     saveFile.close();
+                    saveLabelizedTraceFile.close();
                 }
                 catch (IOException e) 
                 {

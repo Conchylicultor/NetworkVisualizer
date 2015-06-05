@@ -265,4 +265,19 @@ public class Vertex {
         
         return label;
     }
+
+	public String getTraceLabel() {
+        String label = new String();
+        
+        if(seqId != null && !seqId.isEmpty())
+        {
+            label += seqId;
+        }
+        if(persName != null && !persName.isEmpty())
+        {
+            label += ":" + persName;
+        }
+        
+        return label;
+	}
 }
