@@ -534,7 +534,7 @@ public class VisualizerWindow extends JFrame {
                     for(Vertex vertex : sequenceGraph.getVertices())
                     {
                         vertex.setId(i);
-                        saveFile.write(i + " \"" + vertex.getLabel() + "\"\n");
+                        saveFile.write(i + " \"" + vertex.getLabel() + " \"\n");
                         i++;
                     }
 
