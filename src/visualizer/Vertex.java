@@ -38,6 +38,7 @@ public class Vertex {
     private Icon plottedIcon; // Icon after modifications (adding borders,...)
     
     private boolean isHidden = false;
+    private boolean isSelectionFiltered = false;
     private boolean plotNameColor = false;
     private boolean isSelected = false;
     private int nbNeighborSelected = 0;
@@ -189,7 +190,15 @@ public class Vertex {
             updateIcon();
     }
     
-    public void setPlotNameColor(boolean plotNameColor) {
+    public boolean isSelectionFiltered() {
+		return isSelectionFiltered;
+	}
+
+	public void setSelectionFiltered(boolean isSelectionFiltered) {
+		this.isSelectionFiltered = isSelectionFiltered;
+	}
+
+	public void setPlotNameColor(boolean plotNameColor) {
         this.plotNameColor = plotNameColor;
         updateIcon();
     }

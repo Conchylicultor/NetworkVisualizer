@@ -72,6 +72,8 @@ public class VisualizerWindow extends JFrame {
     private JSlider minDateSlider;
     private JSlider maxDateSlider;
     private JSlider weightFilterSlider;
+    private JButton filterSelectionButton;
+    private JButton restoreFilteredSelectionButton;
     private JComboBox<String> layoutChoiceComboBox;
     private JButton adjustGravityButton;
     
@@ -112,8 +114,8 @@ public class VisualizerWindow extends JFrame {
                 JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         
         JPanel controlPanel = new JPanel();
-        controlPanel.setMaximumSize(new Dimension(250, Integer.MAX_VALUE));
-        controlPanel.setPreferredSize(new Dimension(250, Integer.MAX_VALUE));
+        controlPanel.setMaximumSize(new Dimension(260, Integer.MAX_VALUE));
+        controlPanel.setPreferredSize(new Dimension(260, Integer.MAX_VALUE));
         controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         BoxLayout controlPanelLayout = new BoxLayout(controlPanel, BoxLayout.Y_AXIS);
         controlPanel.setLayout(controlPanelLayout);
@@ -149,6 +151,14 @@ public class VisualizerWindow extends JFrame {
         controlPanel.add(new JLabel("Weight Filter: "));
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(weightFilterSlider);
+        
+        JPanel filterClusterPanel = new JPanel();
+        filterClusterPanel.setLayout(new BoxLayout(filterClusterPanel, BoxLayout.X_AXIS));
+        filterClusterPanel.add(filterSelectionButton);
+        filterClusterPanel.add(restoreFilteredSelectionButton);
+        filterClusterPanel.setAlignmentX(Component.LEFT_ALIGNMENT);;
+        
+        controlPanel.add(filterClusterPanel);
         
         controlPanel.add(Box.createVerticalStrut(spacerSize));
         controlPanel.add(new JLabel("Sequence images: "));
@@ -518,6 +528,46 @@ public class VisualizerWindow extends JFrame {
         });
         
         
+        filterSelectionButton = new JButton("Filter selection");
+        filterSelectionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+            	// Hide all selected vertices
+                Collection<Vertex> pickedVertex = new HashSet<Vertex>(pickedState.getPicked());
+                for(Vertex vertex : pickedVertex)
+                {
+                	vertex.setSelectionFiltered(true);
+                }
+                
+            	// Update the graph
+                unpickAll();
+                updateFilterVertexGraph();
+                updateFilterEdgeGraph();
+            }
+        });
+        
+        
+        restoreFilteredSelectionButton = new JButton("Restore");
+        restoreFilteredSelectionButton.setToolTipText("Restore all the filtered selected vertices");
+        restoreFilteredSelectionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+            	// Restore all selected vertices
+                for(Vertex vertex : filteredVertexList)
+                {
+                	vertex.setSelectionFiltered(false);
+                }
+                
+            	// Update the graph
+                unpickAll();
+                updateFilterVertexGraph();
+                updateFilterEdgeGraph();
+                
+                networkCanvas.repaint();
+            }
+        });
+        
+        
         sequenceImagesPane = new SequenceImagesPane();
         
         
@@ -615,8 +665,8 @@ public class VisualizerWindow extends JFrame {
         // ----- Filter new vertices -----
         for(Vertex vertex : sequenceGraph.getVertices())
         {
-            // TODO: Filter also if "hide if selected" is selected ?
-            if(vertex.getDate() < minDateSlider.getValue() || vertex.getDate() > maxDateSlider.getValue()) // Out of range
+            if((vertex.getDate() < minDateSlider.getValue() || vertex.getDate() > maxDateSlider.getValue()) || // Out of range
+                vertex.isSelectionFiltered()) // or manually filtered
             {
                 filteredVertexList.add(vertex);
                 vertexToRemoveList.add(vertex);
@@ -640,7 +690,8 @@ public class VisualizerWindow extends JFrame {
         // ----- Restore the filtered vertices -----
         for(Vertex vertex : filteredVertexList)
         {
-            if(vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) // In range
+            if((vertex.getDate() >= minDateSlider.getValue() && vertex.getDate() <= maxDateSlider.getValue()) && // In range
+                !vertex.isSelectionFiltered()) // and manually restored
             {
                 sequenceGraph.addVertex(vertex);
                 vertexToRemoveList.add(vertex);
