@@ -22,7 +22,7 @@ Example of imput file:
 2 5 0.96
 ```
 
-The format use is the Pajek NET Format with the use of a label of the vertices and a weight ( between 0 and 2) for the edges. The saved graph after edition can look like this:
+The format use is the Pajek NET Format with the use of a label for the vertices and a weight ( between 0 and 2) for the edges. The saved graph after edition can look like this:
 
 ```
 *Vertices 6
