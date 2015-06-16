@@ -578,7 +578,7 @@ public class VisualizerWindow extends JFrame {
                 try 
                 {
                     FileWriter saveFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/network_save.net");
-                    FileWriter saveLabelizedTraceFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/trace_labelized.txt");
+                    FileWriter saveLabelizedTraceFile = new FileWriter("/home/etienne/__A__/Dev/Reidentification/Data/OutputReid/traces_labelized.txt");
                     
                     saveFile.write("*Vertices " + sequenceGraph.getVertexCount() + "\n");
                     int i = 1;
