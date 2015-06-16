@@ -1,5 +1,5 @@
 # NetworkVisualizer
-Visualize the sequence network and allow edition to easily name the sequences
+Visualize the sequence network and allow edition to easily name the sequences.
 
 Example of imput file:
 
@@ -13,16 +13,18 @@ Example of imput file:
 6 " seq:0_13 "
 *Edges
 1 2 0.8
-1 3 2
+1 3 1
 2 3 0.8
 1 4 0.8
 2 4 0.64
-3 4 1.76
+3 4 0
 1 5 0.4
 2 5 0.96
 ```
 
-The format use is the Pajek NET Format with the use of a label for the vertices and a weight ( between 0 and 2) for the edges. The saved graph after edition can look like this:
+The format used is the Pajek NET Format with the use of a label for the vertices and a weight for the edges. The labels contain the **sequence id** which is used to extract the informations, like images, about the sequences by looking on the _Traces_ folder (where the sequences informations are stored). An optional label parameters representing a **timestamp date** (for instance "date:1434421798") can be used to filter the vertices by time. The weight correspond to the **similarity score** (normalized between 0 and 1) and is used to visualize the recognition for differents threshold values.
+
+The saved graph after edition can look like this:
 
 ```
 *Vertices 6
@@ -33,8 +35,10 @@ The format use is the Pajek NET Format with the use of a label for the vertices 
 5 " seq:0_12 pers:Uchiyama "
 6 " seq:0_13 pers:Uchiyama "
 *Edges
-1 4 2
-1 3 2
-4 3 2
-6 5 2
+1 4 1
+1 3 1
+4 3 1
+6 5 1
 ```
+
+The correct paths have to be defined manually.
