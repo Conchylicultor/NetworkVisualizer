@@ -24,7 +24,9 @@ Example of imput file:
 
 The format used is the Pajek NET Format with the use of a label for the vertices and a weight for the edges. The labels contain the **sequence id** which is used to extract the informations, like images, about the sequences by looking on the _Traces_ folder (where the sequences informations are stored). An optional label parameters representing a **timestamp date** (for instance "date:1434421798") can be used to filter the vertices by time. The weight correspond to the **similarity score** (normalized between 0 and 1) and is used to visualize the recognition for differents threshold values.
 
-The saved graph after edition can look like this:
+After editions, two files are saved:
+ * *traces_labelized.txt* contains the traces with the labelized sequences which could be used by the main program to either re-test, evaluate or train the reidentification algorithm.
+ * *network_save.net* contains the edited graph which can be read be the sequence visualizer program. The saved graph after edition can look like this:
 
 ```
 *Vertices 6
@@ -41,4 +43,4 @@ The saved graph after edition can look like this:
 6 5 1
 ```
 
-The correct paths have to be defined manually.
+The correct paths for the file locations have to be defined manually.
