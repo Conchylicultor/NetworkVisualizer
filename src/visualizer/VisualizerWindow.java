@@ -378,7 +378,7 @@ public class VisualizerWindow extends JFrame {
         mergeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                final float maxWeightValue = 2.f; // TODO : Define max value (Warning: either update the edge filter after or define this value as not filterable)
+                final float maxWeightValue = 1.f; // Max value (Warning: either update the edge filter after or define this value as not filterable ?)
                 for(Vertex vertexI : pickedVertexList)
                 {
                     for(Vertex vertexJ : pickedVertexList)
@@ -511,10 +511,10 @@ public class VisualizerWindow extends JFrame {
         });
         
         
-        weightFilterSlider = new JSlider(0, 200, 0);
+        weightFilterSlider = new JSlider(0, 100, 0);
         weightFilterSlider.setAlignmentX(Component.LEFT_ALIGNMENT);
-        weightFilterSlider.setMajorTickSpacing(100);
-        weightFilterSlider.setMinorTickSpacing(20);
+        weightFilterSlider.setMajorTickSpacing(50);
+        weightFilterSlider.setMinorTickSpacing(10);
         weightFilterSlider.setPaintTicks(true);
         weightFilterSlider.addChangeListener(new ChangeListener() {
             @Override
